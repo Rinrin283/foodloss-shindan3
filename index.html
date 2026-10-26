@@ -132,6 +132,28 @@ p{margin:0 0 12px}
 .more-s a{color:var(--sub)}
 a.btn.big{text-decoration:none;text-align:center}
 #start .subtitle{text-align:center;font-size:18px;font-weight:700;color:var(--main);margin:-4px 0 18px}
+.choice.sel{background:#ffd23f}
+.pick{display:flex;gap:12px;align-items:center;width:100%;text-align:left;font:inherit;font-weight:900;font-size:17px;line-height:1.5;background:#fff;color:#1b1340;border:3px solid #1b1340;border-radius:20px;box-shadow:5px 5px 0 #1b1340;padding:14px 16px;margin:0 6px 14px 0;cursor:pointer}
+.pick .no{flex:none;width:36px;height:36px;border-radius:50%;background:var(--ac);border:3px solid #1b1340;text-align:center;line-height:30px;font-weight:900}
+.pick[aria-checked="true"]{background:#ffe08a}
+.pick:active{transform:translate(3px,3px);box-shadow:2px 2px 0 #1b1340}
+.dobox{background:#fff;color:#1b1340;border:3px dashed #1b1340;border-radius:20px;padding:12px 16px;margin:4px 6px 14px 0}
+.dobox b{display:block;font-size:14px}
+.dobox .pg{margin:6px 0 0}
+.review{margin:22px 6px 0 0;background:#fff;color:#1b1340;border:3px solid #1b1340;border-radius:18px;padding:10px 14px}
+.review summary{font-weight:900;cursor:pointer}
+.rv{padding:10px 0;border-top:1px solid #ddd}
+.rv small{display:block;font-weight:700}
+.rv button{font:inherit;font-size:14px;display:block;width:100%;text-align:left;margin-top:6px;padding:8px 10px;border:2px solid #1b1340;border-radius:12px;background:#fff;color:#1b1340;cursor:pointer}
+.rv button.sel{background:#ffd23f;font-weight:700}
+.exp summary{cursor:pointer;font-weight:700;margin-top:4px}
+.data{background:#fff;color:#1b1340;border:2px solid #1b1340;border-radius:14px;padding:8px 14px;font-size:13px;margin:0 0 16px}
+.tlist{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:0}
+.tl{display:flex;flex-direction:column;align-items:center;text-align:center;background:#fff;color:#1b1340;border:1.5px solid #1b1340;border-radius:10px;padding:6px 2px;line-height:1.3;overflow-wrap:anywhere}
+.tl .te{font-size:16px}
+.tl .tn{font-weight:900;font-size:10px}
+.tl .tc{font-size:9px;opacity:.7}
+.tl.me{background:#ffe08a;border-width:2px;box-shadow:2px 2px 0 #1b1340}
 </style>
 </head>
 <body>
@@ -167,8 +189,9 @@ a.btn.big{text-decoration:none;text-align:center}
   <p class="lead">通学、通勤、家事、育児、仕事、勉強…。毎日いそがしいのに、食品ロスなんて気にしてられない！そう思ってない？</p>
   <p>2分だけ、いつもの行動をふり返ってみよう。あなたの暮らしに、食品ロスの“きっかけ”が隠れてるかも。</p>
   <p class="sub">正解はないよ。直感でサクッと選んでね。</p>
+  <div class="data"><b>📝 回答の記録について</b><br>診断の改善のために、12問の回答（A/B）・診断コード・送信日時を記録します。メールアドレスなど個人情報は一切取得しません。</div>
   <button class="btn big" id="go">診断をはじめる</button>
-  <p class="note">試作版です。対策は消費者庁の食品ロス削減ガイドブックを参考にしています。診断の回答は、個人が特定されない形で記録されます。</p>
+  <p class="note">試作版です。対策は消費者庁の食品ロス削減ガイドブックを参考にしています。</p>
 </section>
 
 <section id="quiz" hidden>
@@ -192,10 +215,16 @@ a.btn.big{text-decoration:none;text-align:center}
     <h2>あなたってこんな人</h2>
     <p id="pers"></p>
     <div class="good"><h3>✨ いいところ</h3><ul id="goodList"></ul></div>
-    <div class="exp"><h3>👀 こんな経験ない？</h3><ul id="expList"></ul></div>
+    <div class="exp"><h3>👀 今回の回答で気になったこと</h3><ul id="expList"></ul>
+      <details id="moreExp" hidden><summary id="moreSum"></summary><ul id="moreList"></ul></details></div>
   </div>
-  <h2 class="sec" id="secTitle">まずこれだけやってみて！</h2>
-  <div id="cards"></div>
+  <h2 class="sec" id="secTitle">今週やってみるなら？1つ選んでね</h2>
+  <div id="cards" role="radiogroup" aria-label="今週やってみること"></div>
+  <div id="doBox" class="dobox" hidden aria-live="polite"></div>
+  <details class="review"><summary>回答をふり返る・直す</summary><div id="reviewList"></div></details>
+  <h2 class="sec">ほかの診断結果もチェック</h2>
+  <p class="sub" style="margin:0 0 12px;font-size:14px">全16タイプ。コードは左から購入・調理・保管・食べ切りで、1が「ロスのきっかけがありそうな軸」だよ。</p>
+  <div id="typeList" class="tlist"></div>
   <p class="share">スクショして友達にシェアしてね📸</p>
   <button class="btn big" id="retry">もう一回やってみる</button>
   <div class="more">
@@ -265,15 +294,19 @@ const T = {
 "1110":["買い物から冷蔵庫までノリで動くあなたは、","勢い全開キッチン番長","行動力は抜群。ちょっとブレーキを足すだけで、かなり変わる。"],
 "1111":["食べ物への好奇心がぜんぶ全開なあなたは、","食欲フルスロットル族","食べ物が大好きなのが伝わる結果。伸びしろがいちばん大きいよ。"]
 };
-const RES = [
- {good:"買う前に使い道や在庫を考えられる。ムダ買いに強い！",ex:"安いからってカゴに入れたのに、結局使わなかった…",
-  title:"買う前に冷蔵庫をチラ見",txt:"買い物に行く前に中身を見るだけで、同じものを買っちゃうのを防げるよ。使う日を思い浮かべられる量だけ買えばOK。",pg:"p.58"},
- {good:"人数や家にある食材を見て作れる。作りすぎ知らず！",ex:"気分で作ったら多すぎて、次の日も同じおかずだった…",
-  title:"作る量は人数に合わせる",txt:"食べる人数に合わせて作るのが基本。多めに作るなら「次にいつ食べるか」もセットで決めとくと、余っても安心。",pg:"p.64"},
- {good:"どこに何があるかちゃんと把握できてる。在庫管理がうまい！",ex:"冷蔵庫の奥から、存在を忘れてた食品が出てきた…",
-  title:"置き場所を決めて、棚をリセット",txt:"食品の定位置を決めて、ときどき棚を整理しよう。見えるところにあれば、忘れて期限切れになりにくいよ。",pg:"p.68・p.74"},
- {good:"余った食品や期限が近いものに、ちゃんと出番を作れる。使い切り上手！",ex:"開けたお菓子や余った料理が、そのまま残ってた…",
-  title:"余ったら「次いつ食べるか」だけ決める",txt:"別の料理にアレンジしてもOK。期限が近いものから先に使う献立にすると、使い切りやすくなるよ。",pg:"p.56・p.64"}
+const QD = [
+ {good:"お得でも、使う予定を考えてから買えてる",bad:"お得だと、使う予定がなくても買っちゃう",title:"買う前に「いつ使う？」を考える",scene:"特売コーナーでカゴに入れる前に、「今週のどのごはんに使う？」と心の中で聞いてみる。",pg:"p.58"},
+ {good:"買い物の前に、冷蔵庫や食品庫を確認できてる",bad:"買い物の前に、家にあるものを確認してないことがある",title:"出かける前に冷蔵庫を撮る",scene:"次の買い物に出る前に、冷蔵庫の中をスマホで撮って、買い物中に見返す。",pg:"p.58"},
+ {good:"新商品も、使い道を考えてから買えてる",bad:"新商品は、使い道を決める前につい買っちゃう",title:"新商品は食べる日を決めてからレジへ",scene:"新商品をカゴに入れる前に、食べる日を1つ決める（例：今夜の夕食）。",pg:"p.58"},
+ {good:"家にある食材や予定を見て、献立を決められてる",bad:"献立をその日の気分で決めがち",title:"献立の前に、期限が近いものを1つ探す",scene:"夕食を決める前に冷蔵庫を開けて、期限が近いものを1つ選んでメニューに入れる。",pg:"p.64"},
+ {good:"食べる人数や量に合わせて作れてる",bad:"作りたい量を優先して、多めに作ることがある",title:"作る前に「何人分？」を決める",scene:"料理を始める前に食べる人数を数えて、材料をその人数分に合わせる。",pg:"p.64"},
+ {good:"材料が足りないときは、家にあるもので代用や別メニューにできてる",bad:"材料が足りないときは、買い足して作りがち",title:"足りないときは、まず家にあるもので代用",scene:"材料が足りないと気づいたら、買いに行く前に、冷蔵庫のものでできる別メニューを1分だけ探す。",pg:"p.64"},
+ {good:"何がどこにあるか、だいたい把握できてる",bad:"冷蔵庫や棚がいっぱいで、何があるか探しがち",title:"冷蔵庫の1段だけ整理する",scene:"週末に冷蔵庫の1段だけ取り出して、期限が近いものを手前に並べ直す。",pg:"p.74"},
+ {good:"買った食品の置き場所を、ちゃんと把握できてる",bad:"買ったはずの食品が、あとから奥で見つかることがある",title:"食品の定位置を決める",scene:"買い物から帰ったら、新しく買った食品を「手前の定位置」に入れる。",pg:"p.68"},
+ {good:"「いつか使うかも」より、使う予定を考えて買えてる",bad:"「いつか使うかも」の食品が、予定のないまま残りがち",title:"「いつか使うかも」に使う日をつける",scene:"家にある「いつか使うかも」の食品を1つ選んで、今週のどこで使うか決める。",pg:"p.68"},
+ {good:"食べきれる量だけ開けるなど、残さない工夫がある",bad:"開けたお菓子や食品が、食べきれず残りがち",title:"開けるときは食べ切れる量だけ",scene:"お菓子を開けるとき、食べ切れる分だけ出して、残りはすぐ封をする。",pg:"p.56"},
+ {good:"余った料理や食材の、次の出番を決められてる",bad:"余った料理や食材の次の出番が決まらず、残りがち",title:"余ったら、その場で「次いつ食べる？」",scene:"食事のあと、余りを保存容器に入れるときに、食べる日をスマホのメモか付箋に書く。",pg:"p.64"},
+ {good:"期限が近い食品を、先に使う献立にできてる",bad:"期限が近い食品の使い道が思いつかず、残ることがある",title:"期限がいちばん近いものを明日のごはんに",scene:"冷蔵庫で期限がいちばん近いものを1つ選んで、明日のごはんに入れる。",pg:"p.56"}
 ];
 const PERS = {
 "0000":"計画的で、先のことまで考えられるタイプ。冷蔵庫の中も頭の中もスッキリしてるはず。",
@@ -302,6 +335,23 @@ function pgLinks(s){
 const $ = id => document.getElementById(id);
 let idx = 0, ans = [];
 function show(id){["start","quiz","result"].forEach(s=>$(s).hidden = s!==id); window.scrollTo(0,0);}
+let lock=false;
+function lockIt(){ lock=true; setTimeout(()=>{lock=false;},600); }
+const FORM="https://docs.google.com/forms/d/e/1FAIpQLSfAhPKfEfvaD4mnyxkoE-MuxniWB_2dyokbP0nQ6GiApKNv4Q/formResponse";
+let sendT=null, pending=null;
+function queueSend(){ pending={p:ans.join(""),c:compute().code}; clearTimeout(sendT); sendT=setTimeout(flush,8000); }
+function flush(){
+  if(!pending) return; clearTimeout(sendT);
+  const d=pending; pending=null;
+  try{
+    const body=new URLSearchParams({"entry.1428677149":d.p,"entry.1696568359":d.c});
+    if(navigator.sendBeacon && document.visibilityState==="hidden"){ navigator.sendBeacon(FORM,body); }
+    else{ fetch(FORM,{method:"POST",mode:"no-cors",body}).catch(()=>{}); }
+  }catch(e){}
+}
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="hidden") flush(); });
+window.addEventListener("pagehide",flush);
+
 function renderQ(){
   const q = Q[idx];
   $("qNum").textContent = (idx+1) + " / 12";
@@ -312,62 +362,96 @@ function renderQ(){
   const box = $("choices"); box.innerHTML = "";
   ["A","B"].forEach(l=>{
     const b = document.createElement("button");
-    b.className = "choice";
+    b.className = "choice" + (ans[idx]===l ? " sel" : "");
+    b.setAttribute("aria-pressed", ans[idx]===l ? "true" : "false");
     b.innerHTML = '<span>'+l+'</span>';
     b.appendChild(document.createTextNode(q[l]));
     b.onclick = ()=>pick(l);
     box.appendChild(b);
   });
   $("back").hidden = idx===0;
+  const t=$("qText"); t.setAttribute("tabindex","-1"); t.focus({preventScroll:true});
 }
 function pick(l){
+  if(lock) return; lockIt();
   ans[idx] = l;
   if(idx<11){ idx++; renderQ(); } else finish();
 }
+function compute(){
+  const bits=[0,0,0,0], cnt=[0,0,0,0];
+  Q.forEach((q,i)=>{ if(ans[i]===q.risk) cnt[q.a]++; });
+  cnt.forEach((c,i)=>{ bits[i]=c>=2?1:0; });
+  return {bits,cnt,code:bits.join("")};
+}
 const EMO={"0000":"🧊","0001":"🍪","0010":"🕳️","0011":"⛏️","0100":"🎲","0101":"🍳","0110":"🔥","0111":"🌀","1000":"🎯","1001":"🛍️","1010":"🛒","1011":"🥫","1100":"🎉","1101":"🍱","1110":"🚀","1111":"⚡"};
-const HC=["#7ee8c4","#ffd23f","#ff9ec4","#b794ff","#ff9f5a"];
 const AC=["#ff9ec4","#ffd23f","#7ee8c4","#8fb4ff"];
 const SH=["購入","調理","保管","食べ切り"];
-function finish(){
-  const bits=[0,0,0,0], counts=[0,0,0,0];
-  Q.forEach((q,i)=>{ if(ans[i]===q.risk) counts[q.a]++; });
-  counts.forEach((c,i)=>bits[i] = c>=2 ? 1 : 0);
-  const code = bits.join(""), n = bits.reduce((x,y)=>x+y,0);
-  const [catchTxt, name, desc] = T[code];
-  try{
-    fetch("https://docs.google.com/forms/d/e/1FAIpQLSfAhPKfEfvaD4mnyxkoE-MuxniWB_2dyokbP0nQ6GiApKNv4Q/formResponse",{
-      method:"POST", mode:"no-cors",
-      headers:{"Content-Type":"application/x-www-form-urlencoded"},
-      body:new URLSearchParams({"entry.1428677149":ans.join(""),"entry.1696568359":code})
-    }).catch(()=>{});
-  }catch(e){}
-  $("codeLine").textContent = "TYPE " + code;
-  $("emo").textContent = EMO[code];
-  $("catchTxt").textContent = catchTxt;
-  $("typeName").textContent = name + "！";
-  $("focus").textContent = desc;
-  $("lamps").innerHTML = AX.map((a,i)=>'<span class="stk'+(bits[i]?' on':'')+'">'+(bits[i]?'👀 ':'✓ ')+SH[i]+'</span>').join("");
-  $("pers").textContent = PERS[code];
-  const goods = [], exps = [];
-  bits.forEach((b,i)=>(b?exps:goods).push(RES[i]));
-  $("goodList").innerHTML = (goods.length ? goods.map(r=>'<li>'+r.good+'</li>') : ['<li>食べ物への関心が高くて、行動力もある！ここが一番の武器だよ。</li>']).join("");
-  $("expList").innerHTML = (exps.length ? exps.map(r=>'<li>'+r.ex+'</li>') : ['<li>今回は思い当たる場面は少なめ！</li>']).join("");
-  const cards = $("cards"); cards.innerHTML = "";
-  const fl = bits.map((b,i)=>b?i:-1).filter(i=>i>=0);
-  const nums = ["①","②","③","④"];
-  if(!fl.length){
-    cards.innerHTML = '<div class="step" style="--ac:'+HC[0]+'"><div class="no">✓</div><div><h3>今のペースをキープ！</h3><p>買う前の確認や使い切りの工夫が、もう習慣になってるよ。冷蔵庫を見直す日を、たまに作れば完璧。</p></div></div>';
-  } else fl.forEach((i,k)=>{
-    const r = RES[i], el = document.createElement("div");
-    el.className = "step"; el.style.setProperty("--ac", AC[i]);
-    el.innerHTML = '<div class="no">'+(k+1)+'</div><div><h3>'+r.title+'</h3><p>'+r.txt+'</p><p class="pg">'+AX[i].name+'の軸｜ガイドブック '+pgLinks(r.pg)+'</p></div>';
-    cards.appendChild(el);
+function render(){
+  const {bits,code}=compute();
+  const [catchTxt,name,desc]=T[code];
+  $("codeLine").textContent="TYPE "+code;
+  $("emo").textContent=EMO[code];
+  $("catchTxt").textContent=catchTxt;
+  $("typeName").textContent=name+"！";
+  $("focus").textContent=desc;
+  $("pers").textContent=PERS[code];
+  $("lamps").innerHTML=AX.map((a,i)=>'<span class="stk'+(bits[i]?' on':'')+'">'+(bits[i]?'👀 ':'✓ ')+SH[i]+'</span>').join("");
+  const risky=[], safe=[];
+  Q.forEach((q,i)=>(ans[i]===q.risk?risky:safe).push(i));
+  risky.sort((a,b)=>(bits[Q[b].a]-bits[Q[a].a])||(a-b));
+  const gs=safe.slice().sort((a,b)=>(bits[Q[a].a]-bits[Q[b].a])||(a-b));
+  const gp=[], used=new Set();
+  gs.forEach(i=>{ if(gp.length<3 && !used.has(Q[i].a)){ gp.push(i); used.add(Q[i].a); } });
+  gs.forEach(i=>{ if(gp.length<3 && !gp.includes(i)) gp.push(i); });
+  $("goodList").innerHTML = gp.length ? gp.map(i=>'<li>'+QD[i].good+'</li>').join("") : '<li>食べ物への関心が高くて、行動力もある！ここが一番の武器だよ。</li>';
+  const top=risky.slice(0,3), rest=risky.slice(3);
+  $("expList").innerHTML = top.length ? top.map(i=>'<li>'+QD[i].bad+'</li>').join("") : '<li>今回は気になるところは見つからなかったよ！</li>';
+  $("moreExp").hidden = !rest.length;
+  $("moreSum").textContent = "ほかにも"+rest.length+"個";
+  $("moreList").innerHTML = rest.map(i=>'<li>'+QD[i].bad+'</li>').join("");
+  const cards=$("cards"); cards.innerHTML=""; $("doBox").hidden=true;
+  if(!top.length){
+    $("secTitle").textContent="いい感じ！";
+    cards.innerHTML='<div class="dobox"><b>今のペースをキープ！</b>買う前の確認や使い切りの工夫が、もう習慣になってるよ。冷蔵庫を見直す日を、たまに作れば完璧。</div>';
+  } else {
+    $("secTitle").textContent="今週やってみるなら？1つ選んでね";
+    top.forEach((i,k)=>{
+      const b=document.createElement("button");
+      b.className="pick"; b.setAttribute("role","radio"); b.setAttribute("aria-checked","false");
+      b.style.setProperty("--ac",AC[Q[i].a]);
+      b.innerHTML='<span class="no">'+(k+1)+'</span><span>'+QD[i].title+'</span>';
+      b.onclick=()=>{
+        cards.querySelectorAll(".pick").forEach(x=>x.setAttribute("aria-checked","false"));
+        b.setAttribute("aria-checked","true");
+        const d=$("doBox"); d.hidden=false;
+        d.innerHTML='<b>📍 こんな場面でやってみよう</b>'+QD[i].scene+'<p class="pg">くわしくは ガイドブック '+pgLinks(QD[i].pg)+'</p>';
+      };
+      cards.appendChild(b);
+    });
+  }
+  $("reviewList").innerHTML="";
+  Q.forEach((q,i)=>{
+    const row=document.createElement("div"); row.className="rv";
+    row.innerHTML='<small>Q'+(i+1)+'　'+q.q+'</small>';
+    ["A","B"].forEach(l=>{
+      const bt=document.createElement("button");
+      bt.className=ans[i]===l?"sel":"";
+      bt.setAttribute("aria-pressed",ans[i]===l?"true":"false");
+      bt.textContent=l+"　"+q[l];
+      bt.onclick=()=>{ if(ans[i]===l) return; ans[i]=l; queueSend(); render(); };
+      row.appendChild(bt);
+    });
+    $("reviewList").appendChild(row);
   });
-  show("result");
+  $("typeList").innerHTML=Object.keys(T).sort().map(c=>'<div class="tl'+(c===code?' me':'')+'"><span class="te">'+EMO[c]+'</span><span class="tn">'+T[c][1]+'</span><span class="tc">'+c+(c===code?'・あなた':'')+'</span></div>').join("");
 }
-$("go").onclick = ()=>{ idx=0; ans=[]; show("quiz"); renderQ(); };
+function finish(){
+  queueSend(); render(); show("result");
+  const h=$("hero"); h.setAttribute("tabindex","-1"); h.focus({preventScroll:true});
+}
+$("go").onclick = ()=>{ if(lock) return; lockIt(); idx=0; ans=[]; show("quiz"); renderQ(); };
 $("back").onclick = ()=>{ if(idx>0){ idx--; renderQ(); } };
-$("retry").onclick = ()=>{ show("start"); };
+$("retry").onclick = ()=>{ flush(); show("start"); };
 </script>
 </body>
 </html>
